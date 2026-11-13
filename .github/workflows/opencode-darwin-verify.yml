@@ -1,0 +1,27 @@
+name: opencode-darwin-verify
+
+on:
+  push:
+    branches:
+      - opencode-2.3.0
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: DeterminateSystems/nix-installer-action@v23
+        with:
+          determinate: false
+      # Temporary branch-local verification; removed before the upstream PR.
+      - name: Build opencode and opencode-desktop
+        run: nix-build --option sandbox true -A opencode -A opencode-desktop --no-out-link
+      - name: Smoke-test opencode
+        run: |
+          out=$(nix-build --option sandbox true -A opencode --no-out-link)
+          "$out/bin/opencode" --version
